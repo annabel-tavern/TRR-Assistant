@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RealReal Enhancer</title>
+  <style>
+    :root { --bg: #111; --surface: #1a1a1a; --surface2: #222; --surface3: #2a2a2a; --border: #2a2a2a; --text: #f0f0f0; --text2: #aaa; --text3: #666; --gold: #c8a97e; --gold-light: #d4b88f; --gold-dim: rgba(200,169,126,0.12); --green: #27ae60; --red: #e74c3c; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); width: 100%; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+
+    .sp-header { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .sp-title { font-size: 12px; font-weight: 700; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; flex: 1; }
+    .sp-dash-btn { padding: 5px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; color: var(--text3); font-size: 10px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .sp-dash-btn:hover { border-color: var(--gold); color: var(--text2); }
+
+    .sp-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .sp-tab { flex: 1; padding: 10px 8px; text-align: center; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .sp-tab:hover { color: var(--text2); }
+    .sp-tab.active { color: var(--gold); border-color: var(--gold); }
+
+    .sp-tab-content { display: none; flex: 1; overflow-y: auto; }
+    .sp-tab-content.active { display: flex; flex-direction: column; }
+    .sp-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+    .sp-scroll::-webkit-scrollbar { width: 4px; }
+    .sp-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    .sp-section-title { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; margin: 12px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+    .sp-section-title:first-child { margin-top: 0; }
+
+    .sp-alert { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 8px; background: rgba(39,174,96,0.08); border: 1px solid rgba(39,174,96,0.2); border-radius: 8px; }
+    .sp-alert-text { font-size: 11px; color: var(--green); font-weight: 500; flex: 1; }
+    .sp-alert-count { font-size: 18px; font-weight: 700; color: var(--green); }
+
+    .sp-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .sp-preset { display: flex; align-items: center; gap: 4px; padding: 5px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; text-decoration: none; font-family: inherit; }
+    .sp-preset:hover { border-color: var(--gold); color: var(--text); }
+
+    .sp-item { display: flex; gap: 10px; padding: 8px; margin-bottom: 6px; border-radius: 8px; cursor: pointer; transition: background 0.15s; text-decoration: none; color: inherit; }
+    .sp-item:hover { background: var(--surface2); }
+    .sp-item-img { width: 48px; height: 64px; border-radius: 6px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
+    .sp-item-placeholder { width: 48px; height: 64px; border-radius: 6px; background: var(--surface2); flex-shrink: 0; }
+    .sp-item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .sp-item-brand { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .sp-item-title { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sp-item-price { font-size: 12px; font-weight: 700; color: var(--gold); }
+    .sp-item-drop { font-size: 9px; color: var(--green); font-weight: 600; }
+    .sp-item-original { font-size: 9px; color: var(--text3); text-decoration: line-through; }
+
+    .sp-label-header { display: flex; align-items: center; gap: 6px; margin: 10px 0 6px; font-size: 11px; font-weight: 600; color: var(--text2); }
+    .sp-label-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .sp-label-count { font-size: 10px; color: var(--text3); margin-left: auto; }
+
+    /* ── Music Player ───────────────────────────────── */
+    .sp-music { flex-shrink: 0; border-top: 1px solid var(--border); background: var(--surface); padding: 12px; }
+    .sp-music-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .sp-music-title { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; flex: 1; }
+    .sp-music-change { font-size: 9px; color: var(--gold); cursor: pointer; background: none; border: none; font-family: inherit; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sp-spotify-embed iframe { width: 100%; border: none; border-radius: 8px; }
+
+    .sp-playlist-picker { display: none; margin-top: 8px; }
+    .sp-playlist-picker.open { display: block; }
+    .sp-playlist-option { display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 4px; border-radius: 6px; cursor: pointer; transition: background 0.15s; font-size: 11px; color: var(--text2); }
+    .sp-playlist-option:hover { background: var(--surface2); }
+    .sp-playlist-option.active { color: var(--gold); }
+    .sp-plo-name { font-weight: 500; }
+    .sp-plo-desc { font-size: 9px; color: var(--text3); }
+
+    .sp-custom-url { display: flex; gap: 6px; margin-top: 8px; }
+    .sp-custom-url input { flex: 1; padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 11px; font-family: inherit; outline: none; }
+    .sp-custom-url input:focus { border-color: var(--gold); }
+    .sp-custom-url button { padding: 6px 10px; background: var(--gold); border: none; border-radius: 6px; color: #111; font-size: 10px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+
+    /* ── Empty States ───────────────────────────────── */
+    .sp-empty { text-align: center; padding: 32px 16px; color: var(--text3); }
+    .sp-empty-icon { font-size: 32px; margin-bottom: 10px; }
+    .sp-empty-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+    .sp-empty-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
+    .sp-empty-steps { text-align: left; margin-top: 16px; }
+    .sp-empty-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+    .sp-step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--gold-dim); color: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .sp-step-text { font-size: 11px; color: var(--text2); line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="sp-header">
+    <span style="font-size:16px">⚡</span>
+    <span class="sp-title">Enhancer</span>
+    <button class="sp-dash-btn" id="open-dashboard">Dashboard</button>
+  </div>
+  <div class="sp-tabs">
+    <div class="sp-tab active" data-tab="items">My Items</div>
+    <div class="sp-tab" data-tab="presets">Presets</div>
+  </div>
+  <div class="sp-tab-content active" id="tab-items"><div class="sp-scroll" id="items-scroll"></div></div>
+  <div class="sp-tab-content" id="tab-presets"><div class="sp-scroll" id="presets-scroll"></div></div>
+
+  <div class="sp-music">
+    <div class="sp-music-header">
+      <span style="font-size:12px">🎵</span>
+      <span class="sp-music-title">Now Playing</span>
+      <button class="sp-music-change" id="toggle-playlists">Change</button>
+    </div>
+    <div class="sp-spotify-embed" id="spotify-embed"></div>
+    <div class="sp-playlist-picker" id="playlist-picker">
+      <div class="sp-playlist-option" data-playlist="37i9dQZF1DWUraJYejk11q"><span>👠</span><div><div class="sp-plo-name">Fashion Forward</div><div class="sp-plo-desc">Spotify's fashion playlist</div></div></div>
+      <div class="sp-playlist-option" data-playlist="37i9dQZF1DX8Uebhn9wzrS"><span>🖤</span><div><div class="sp-plo-name">Chill Lounge</div><div class="sp-plo-desc">Relaxed, sophisticated vibes</div></div></div>
+      <div class="sp-playlist-option" data-playlist="37i9dQZF1DWZjqjZMudx9T"><span>🌙</span><div><div class="sp-plo-name">Late Night Vibes</div><div class="sp-plo-desc">Midnight shopping energy</div></div></div>
+      <div class="sp-playlist-option" data-playlist="37i9dQZF1DX4sWSpwq3LiO"><span>✨</span><div><div class="sp-plo-name">Peaceful Piano</div><div class="sp-plo-desc">Calm, focused browsing</div></div></div>
+      <div class="sp-custom-url">
+        <input type="text" id="custom-playlist-url" placeholder="Paste any Spotify playlist URL...">
+        <button id="apply-custom-playlist">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let presets = [], labels = [], savedItems = {}, currentPlaylist = '37i9dQZF1DWUraJYejk11q';
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+    function parsePrice(s) { if (!s) return 0; const m = String(s).replace(/,/g,'').match(/[\d.]+/); return m ? parseFloat(m[0]) : 0; }
+
+    async function loadAll() {
+      const sync = await chrome.storage.sync.get(['presets', 'settings', 'labels', 'spotifyPlaylist']);
+      const local = await chrome.storage.local.get(['savedItems']);
+      presets = sync.presets || [];
+      labels = sync.labels || [
+        { id: 'want-to-buy', name: 'Want to Buy', emoji: '🛒', color: '#27ae60' },
+        { id: 'reference', name: 'Reference', emoji: '📌', color: '#3498db' },
+        { id: 'gift', name: 'For a Gift', emoji: '🎁', color: '#e74c3c' },
+      ];
+      savedItems = local.savedItems || {};
+      currentPlaylist = sync.spotifyPlaylist || currentPlaylist;
+    }
+
+    function renderItems() {
+      const scroll = document.getElementById('items-scroll');
+      const keys = Object.keys(savedItems);
+      if (!keys.length) {
+        scroll.innerHTML = `<div class="sp-empty"><div class="sp-empty-icon">✨</div><div class="sp-empty-title">Your collection starts here</div><div class="sp-empty-desc">Tag items as you browse The RealReal and they'll show up right here.</div>
+          <div class="sp-empty-steps">
+            <div class="sp-empty-step"><span class="sp-step-num">1</span><span class="sp-step-text">Hover over any item on The RealReal</span></div>
+            <div class="sp-empty-step"><span class="sp-step-num">2</span><span class="sp-step-text">Tap an emoji to label it — 🛒 buy, 📌 reference, 🎁 gift</span></div>
+            <div class="sp-empty-step"><span class="sp-step-num">3</span><span class="sp-step-text">Your tagged items appear here with price tracking</span></div>
+          </div></div>`;
+        return;
+      }
+      let html = '';
+      const drops = keys.filter(k => { const i = savedItems[k]; return parsePrice(i.originalPrice) > 0 && parsePrice(i.currentPrice) > 0 && parsePrice(i.currentPrice) < parsePrice(i.originalPrice); });
+      if (drops.length) html += `<div class="sp-alert"><span style="font-size:16px">📉</span><span class="sp-alert-text">Price drops detected!</span><span class="sp-alert-count">${drops.length}</span></div>`;
+
+      labels.forEach(l => {
+        const gk = keys.filter(k => savedItems[k].labels?.includes(l.id));
+        if (!gk.length) return;
+        html += `<div class="sp-label-header"><span class="sp-label-dot" style="background:${l.color}"></span>${l.emoji} ${esc(l.name)}<span class="sp-label-count">${gk.length}</span></div>`;
+        gk.forEach(k => {
+          const item = savedItems[k]; if (!item) return;
+          const orig = parsePrice(item.originalPrice), curr = parsePrice(item.currentPrice);
+          const dropped = orig > 0 && curr > 0 && curr < orig;
+          const pct = dropped ? Math.round(((orig-curr)/orig)*100) : 0;
+          html += `<div class="sp-item" data-url="${esc(item.url)}">
+            ${item.imageUrl ? `<img class="sp-item-img" src="${esc(item.imageUrl)}" loading="lazy">` : '<div class="sp-item-placeholder"></div>'}
+            <div class="sp-item-info">
+              ${item.brand ? `<span class="sp-item-brand">${esc(item.brand)}</span>` : ''}
+              <span class="sp-item-title">${esc(item.title)}</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="sp-item-price">${esc(item.currentPrice||item.price)}</span>
+                ${dropped ? `<span class="sp-item-original">${esc(item.originalPrice)}</span><span class="sp-item-drop">▼${pct}%</span>` : ''}
+              </div>
+            </div></div>`;
+        });
+      });
+      scroll.innerHTML = html;
+      scroll.querySelectorAll('.sp-item').forEach(el => el.addEventListener('click', () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, tabs => { if (tabs[0]) chrome.tabs.update(tabs[0].id, { url: el.dataset.url }); });
+      }));
+    }
+
+    function renderPresets() {
+      const scroll = document.getElementById('presets-scroll');
+      if (!presets.length) {
+        scroll.innerHTML = `<div class="sp-empty"><div class="sp-empty-icon">🔖</div><div class="sp-empty-title">No presets yet</div><div class="sp-empty-desc">Save your favorite filter combos from the toolbar on The RealReal.</div>
+          <div class="sp-empty-steps">
+            <div class="sp-empty-step"><span class="sp-step-num">1</span><span class="sp-step-text">Apply your filters on The RealReal</span></div>
+            <div class="sp-empty-step"><span class="sp-step-num">2</span><span class="sp-step-text">Click "+ Save Current Filters" in the bottom toolbar</span></div>
+            <div class="sp-empty-step"><span class="sp-step-num">3</span><span class="sp-step-text">Name it, then apply to any page with one click</span></div>
+          </div></div>`;
+        return;
+      }
+      let html = '<div class="sp-section-title">Your Filter Presets</div><div class="sp-presets">';
+      presets.forEach(p => { html += `<button class="sp-preset" data-url="${esc(p.fullUrl||'')}" data-search="${esc(p.search||'')}" data-hash="${esc(p.hash||'')}">${esc(p.emoji||'🔖')} ${esc(p.name)}</button>`; });
+      html += '</div>';
+      scroll.innerHTML = html;
+      scroll.querySelectorAll('.sp-preset').forEach(el => el.addEventListener('click', () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+          if (!tabs[0]) return;
+          const u = new URL(tabs[0].url);
+          const noF = ['/account','/cart','/checkout','/login','/signup','/settings','/orders','/help'];
+          const ok = u.pathname !== '/' && !noF.some(p => u.pathname.startsWith(p));
+          const url = (ok && (el.dataset.search||el.dataset.hash)) ? u.origin + u.pathname + el.dataset.search + el.dataset.hash : el.dataset.url;
+          chrome.tabs.update(tabs[0].id, { url });
+        });
+      }));
+    }
+
+    function renderPlayer() {
+      document.getElementById('spotify-embed').innerHTML = `<iframe src="https://open.spotify.com/embed/playlist/${currentPlaylist}?utm_source=generator&theme=0" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:8px"></iframe>`;
+      document.querySelectorAll('.sp-playlist-option').forEach(o => o.classList.toggle('active', o.dataset.playlist === currentPlaylist));
+    }
+
+    function setupMusic() {
+      document.getElementById('toggle-playlists').addEventListener('click', () => document.getElementById('playlist-picker').classList.toggle('open'));
+      document.querySelectorAll('.sp-playlist-option[data-playlist]').forEach(o => o.addEventListener('click', async () => {
+        currentPlaylist = o.dataset.playlist; await chrome.storage.sync.set({ spotifyPlaylist: currentPlaylist }); renderPlayer(); document.getElementById('playlist-picker').classList.remove('open');
+      }));
+      document.getElementById('apply-custom-playlist').addEventListener('click', async () => {
+        const url = document.getElementById('custom-playlist-url').value.trim();
+        const m = url.match(/playlist\/([a-zA-Z0-9]+)/);
+        if (m) { currentPlaylist = m[1]; await chrome.storage.sync.set({ spotifyPlaylist: currentPlaylist }); renderPlayer(); document.getElementById('custom-playlist-url').value = ''; document.getElementById('playlist-picker').classList.remove('open'); }
+      });
+    }
+
+    document.querySelectorAll('.sp-tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.sp-tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.sp-tab-content').forEach(x => x.classList.remove('active'));
+      t.classList.add('active'); document.getElementById(`tab-${t.dataset.tab}`).classList.add('active');
+    }));
+    document.getElementById('open-dashboard').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') }));
+    chrome.runtime.onMessage.addListener(msg => { if (msg.type === 'RELOAD_DATA') loadAll().then(() => { renderItems(); renderPresets(); }); });
+
+    (async () => { await loadAll(); renderItems(); renderPresets(); renderPlayer(); setupMusic(); })();
+  </script>
+</body>
+</html>
