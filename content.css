@@ -1,0 +1,184 @@
+/* ============================================================
+   RealReal Enhancer - Styles (v1.3)
+   ============================================================ */
+
+/* ── Toolbar ───────────────────────────────────────────────── */
+#trr-enhancer-toolbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+.trr-toolbar-inner { background: #1a1a1a; border-top: 1px solid #333; box-shadow: 0 -4px 20px rgba(0,0,0,0.3); }
+.trr-toolbar-brand { display: flex; align-items: center; gap: 8px; padding: 8px 16px; cursor: pointer; user-select: none; border-bottom: 1px solid #2a2a2a; }
+.trr-toolbar-brand:hover { background: #222; }
+.trr-logo { font-size: 14px; }
+.trr-brand-text { color: #c8a97e; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; flex: 1; }
+.trr-collapse-arrow { color: #666; font-size: 10px; }
+#trr-enhancer-toolbar.trr-collapsed .trr-toolbar-content { display: none; }
+#trr-enhancer-toolbar.trr-collapsed .trr-toolbar-brand { border-bottom: none; }
+.trr-toolbar-content { display: flex; align-items: center; padding: 10px 16px; gap: 16px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #444 transparent; }
+
+/* ── Presets ───────────────────────────────────────────────── */
+.trr-presets-section { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.trr-presets-list { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+.trr-presets-list::-webkit-scrollbar { display: none; }
+.trr-no-presets { color: #666; font-size: 12px; white-space: nowrap; font-style: italic; }
+
+.trr-preset-wrap { position: relative; flex-shrink: 0; }
+.trr-preset-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 20px; color: #e8e8e8; font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.trr-preset-btn:hover { background: #333; border-color: #c8a97e; color: #fff; }
+.trr-preset-btn.trr-preset-active { background: #c8a97e; color: #1a1a1a; border-color: #c8a97e; }
+.trr-preset-icon { font-size: 13px; }
+.trr-preset-name { font-weight: 500; }
+
+.trr-preset-actions { position: absolute; top: -8px; right: -4px; display: flex; gap: 2px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+.trr-preset-wrap:hover .trr-preset-actions { opacity: 1; pointer-events: auto; }
+.trr-pa-edit, .trr-pa-del { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: #333; border: 1px solid #555; border-radius: 50%; color: #ccc; font-size: 10px; cursor: pointer; transition: all 0.15s; font-family: inherit; padding: 0; line-height: 1; }
+.trr-pa-edit:hover { background: #c8a97e; color: #1a1a1a; border-color: #c8a97e; }
+.trr-pa-del:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+.trr-save-btn { padding: 6px 14px; background: transparent; border: 1px dashed #555; border-radius: 20px; color: #c8a97e; font-size: 12px; font-family: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
+.trr-save-btn:hover { border-color: #c8a97e; background: rgba(200,169,126,0.1); }
+.trr-divider { width: 1px; height: 28px; background: #333; flex-shrink: 0; }
+
+/* ── Toggles ──────────────────────────────────────────────── */
+.trr-toggles-section { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.trr-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; white-space: nowrap; }
+.trr-toggle input { display: none; }
+.trr-toggle-slider { position: relative; width: 32px; height: 18px; background: #444; border-radius: 9px; transition: background 0.2s; }
+.trr-toggle-slider::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #999; border-radius: 50%; transition: all 0.2s; }
+.trr-toggle input:checked + .trr-toggle-slider { background: #c8a97e; }
+.trr-toggle input:checked + .trr-toggle-slider::after { left: 16px; background: #fff; }
+.trr-toggle-label { color: #999; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.trr-toggle input:checked ~ .trr-toggle-label { color: #c8a97e; }
+
+/* ── Modal ─────────────────────────────────────────────────── */
+.trr-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999999; backdrop-filter: blur(4px); }
+.trr-modal { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 24px; width: 420px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.trr-modal-sm { width: 300px; text-align: center; }
+.trr-modal h3 { margin: 0 0 12px; color: #f0f0f0; font-size: 16px; font-weight: 600; }
+.trr-modal p { margin: 0 0 16px; color: #888; font-size: 12px; }
+
+.trr-modal-context { background: #252525; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+.trr-cr { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.trr-cl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #666; flex-shrink: 0; min-width: 80px; }
+.trr-cv { font-size: 12px; color: #aaa; word-break: break-word; }
+.trr-ch { color: #c8a97e !important; font-weight: 500; }
+
+.trr-filter-source { margin-bottom: 14px; padding: 12px; background: #252525; border: 1px solid #333; border-radius: 8px; }
+.trr-fs-label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 8px; }
+.trr-fs-options { display: flex; flex-direction: column; gap: 8px; }
+.trr-radio { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: #ccc; }
+.trr-radio input { accent-color: #c8a97e; }
+
+.trr-mf { margin-bottom: 14px; }
+.trr-mf label { display: block; color: #aaa; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.trr-mf input[type='text'] { width: 100%; padding: 8px 12px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #f0f0f0; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.trr-mf input:focus { border-color: #c8a97e; }
+.trr-mf input::placeholder { color: #555; }
+
+.trr-emoji-picker { display: flex; flex-wrap: wrap; gap: 4px; }
+.trr-emoji-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #2a2a2a; border: 2px solid transparent; border-radius: 8px; font-size: 18px; cursor: pointer; transition: all 0.15s; }
+.trr-emoji-btn:hover { background: #333; border-color: #555; }
+.trr-emoji-btn.trr-es { border-color: #c8a97e; background: #333; }
+
+.trr-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.trr-btn-cancel { padding: 8px 16px; background: #333; border: 1px solid #444; border-radius: 6px; color: #ccc; font-size: 13px; font-family: inherit; cursor: pointer; }
+.trr-btn-cancel:hover { background: #444; }
+.trr-btn-save { padding: 8px 20px; background: #c8a97e; border: none; border-radius: 6px; color: #1a1a1a; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.trr-btn-save:hover { background: #d4b88f; }
+.trr-btn-delete { padding: 8px 20px; background: #c0392b; border: none; border-radius: 6px; color: #fff; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.trr-btn-delete:hover { background: #e74c3c; }
+
+/* ── Toast ─────────────────────────────────────────────────── */
+.trr-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: #2a2a2a; color: #c8a97e; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 8px 30px rgba(0,0,0,0.4); border: 1px solid #3a3a3a; opacity: 0; transition: all 0.3s; z-index: 99999999; pointer-events: none; }
+.trr-toast-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   ITEM LABELS - Colored dots + hover tag panel
+   ============================================================ */
+
+/* ── Colored Dot Indicators ───────────────────────────────── */
+.trr-label-dots {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.trr-label-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.8);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* ── Hover Label Panel ────────────────────────────────────── */
+.trr-label-panel {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Show on card hover */
+[data-trr-labeled]:hover .trr-label-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.trr-label-tag {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.trr-label-tag:hover {
+  background: rgba(50, 50, 50, 0.95);
+  border-color: var(--label-color, #666);
+  transform: scale(1.1);
+}
+
+.trr-label-tag.trr-lt-active {
+  background: var(--label-color, #666);
+  border-color: var(--label-color, #666);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* ── Compact View ─────────────────────────────────────────── */
+.trr-enhancer-compact a[href*="/products/"] img { max-height: 200px !important; object-fit: cover !important; }
+.trr-enhancer-compact a[href*="/products/"] { font-size: 11px !important; }
+.trr-enhancer-compact [style*='grid-template-columns'] { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; gap: 8px !important; }
+
+body { padding-bottom: 90px !important; }
+body:has(#trr-enhancer-toolbar.trr-collapsed) { padding-bottom: 40px !important; }
+
+/* ── Dim Sold ─────────────────────────────────────────────── */
+.trr-enhancer-dim-sold [data-trr-sold='true'] { opacity: 0.25 !important; filter: grayscale(80%) !important; transition: opacity 0.3s, filter 0.3s; position: relative; }
+.trr-enhancer-dim-sold [data-trr-sold='true']:hover { opacity: 0.7 !important; filter: grayscale(30%) !important; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .trr-toolbar-content { flex-direction: column; align-items: stretch; gap: 10px; }
+  .trr-divider { width: 100%; height: 1px; }
+  .trr-label-tag { width: 28px; height: 28px; font-size: 14px; }
+}
