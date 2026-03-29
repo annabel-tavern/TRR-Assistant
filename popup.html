@@ -22,7 +22,7 @@
     .qs-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
 
     .actions { padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-    .action-btn { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.15s; text-decoration: none; color: inherit; font-family: inherit; font-size: 13px; width: 100%; text-align: left; }
+    .action-btn { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.15s; color: inherit; font-family: inherit; font-size: 13px; width: 100%; text-align: left; }
     .action-btn:hover { background: var(--surface2); border-color: var(--gold); }
     .action-icon { font-size: 18px; }
     .action-info { flex: 1; }
@@ -54,151 +54,147 @@
     <h1>RealReal Enhancer</h1>
     <span class="status-dot" id="status-dot"></span>
   </div>
+
   <div class="stats-row" id="stats-row">
-    <div class="qs"><div class="qs-num gold">-</div><div class="qs-label">Items</div></div>
-    <div class="qs"><div class="qs-num">-</div><div class="qs-label">Drops</div></div>
-    <div class="qs"><div class="qs-num">-</div><div class="qs-label">Presets</div></div>
+    <div class="qs"><div class="qs-num gold" id="stat-items">-</div><div class="qs-label">Items</div></div>
+    <div class="qs"><div class="qs-num" id="stat-drops">-</div><div class="qs-label">Drops</div></div>
+    <div class="qs"><div class="qs-num" id="stat-presets">-</div><div class="qs-label">Presets</div></div>
   </div>
+
   <div class="actions">
-    <button class="action-btn" id="open-sidepanel">
+    <button class="action-btn" onclick="openSidePanel()">
       <span class="action-icon">🎵</span>
       <div class="action-info"><div class="action-name">Side Panel</div><div class="action-desc">Items + music while you browse</div></div>
       <span class="action-arrow">→</span>
     </button>
-    <button class="action-btn" id="open-dashboard">
+    <button class="action-btn" onclick="openDashboard()">
       <span class="action-icon">📊</span>
       <div class="action-info"><div class="action-name">Dashboard</div><div class="action-desc">Full view of all your items and stats</div></div>
       <span class="action-arrow">→</span>
     </button>
   </div>
+
   <div class="presets-section">
     <div class="presets-title">Quick Apply Preset</div>
     <div class="presets-pills" id="presets-pills">
       <span class="no-presets">Loading...</span>
     </div>
   </div>
+
   <div class="settings-strip">
-    <label class="ss-toggle"><input type="checkbox" id="s-compact"><span class="ss-slider"></span><span class="ss-label">Compact</span></label>
-    <label class="ss-toggle"><input type="checkbox" id="s-dim"><span class="ss-slider"></span><span class="ss-label">Dim Sold</span></label>
+    <label class="ss-toggle"><input type="checkbox" id="s-compact" onchange="toggleSetting('compactView', this.checked)"><span class="ss-slider"></span><span class="ss-label">Compact</span></label>
+    <label class="ss-toggle"><input type="checkbox" id="s-dim" onchange="toggleSetting('dimSold', this.checked)"><span class="ss-slider"></span><span class="ss-label">Dim Sold</span></label>
   </div>
+
   <script>
-    // ═══════════════════════════════════════════════════════
-    // STEP 1: Wire up buttons IMMEDIATELY so they always work
-    // even if data loading fails later
-    // ═══════════════════════════════════════════════════════
+    // ── Button handlers (inline onclick, can't fail) ──────
 
-    document.getElementById('open-dashboard').addEventListener('click', () => {
+    function openDashboard() {
       chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
-      window.close();
-    });
-
-    document.getElementById('open-sidepanel').addEventListener('click', async () => {
-      try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab) await chrome.sidePanel.open({ tabId: tab.id });
-      } catch (e) {
-        // Fallback: open as a regular tab if side panel API isn't available
-        chrome.tabs.create({ url: chrome.runtime.getURL('sidepanel.html') });
-      }
-      window.close();
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // STEP 2: Load data and populate UI (wrapped in try/catch
-    // so errors here don't break the buttons above)
-    // ═══════════════════════════════════════════════════════
-
-    function parsePrice(s) {
-      if (!s) return 0;
-      const m = String(s).replace(/,/g, '').match(/[\d.]+/);
-      return m ? parseFloat(m[0]) : 0;
     }
 
-    function esc(s) {
-      const d = document.createElement('div');
-      d.textContent = s || '';
-      return d.innerHTML;
+    function openSidePanel() {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0] && chrome.sidePanel && chrome.sidePanel.open) {
+          chrome.sidePanel.open({ tabId: tabs[0].id }).catch(function () {
+            chrome.tabs.create({ url: chrome.runtime.getURL('sidepanel.html') });
+          });
+        } else {
+          chrome.tabs.create({ url: chrome.runtime.getURL('sidepanel.html') });
+        }
+      });
     }
 
-    (async function loadPopupData() {
-      try {
-        // Load data
-        const sync = await chrome.storage.sync.get(['presets', 'settings']);
-        const local = await chrome.storage.local.get(['savedItems']);
-        const presets = sync.presets || [];
-        const settings = sync.settings || {};
-        const savedItems = local.savedItems || {};
+    function applyPreset(search, hash, fullUrl) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (!tabs[0]) return;
+        var u = new URL(tabs[0].url);
+        var noF = ['/account', '/cart', '/checkout', '/login', '/signup', '/settings', '/orders', '/help'];
+        var ok = u.pathname !== '/' && !noF.some(function (p) { return u.pathname.startsWith(p); });
+        var url = (ok && (search || hash)) ? u.origin + u.pathname + search + hash : fullUrl;
+        chrome.tabs.update(tabs[0].id, { url: url });
+        window.close();
+      });
+    }
 
-        // Status dot
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0] && tabs[0].url && tabs[0].url.includes('therealreal.com')) {
-            document.getElementById('status-dot').classList.add('on');
+    var currentSettings = {};
+
+    function toggleSetting(key, value) {
+      currentSettings[key] = value;
+      chrome.storage.sync.set({ settings: currentSettings });
+      chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' });
+    }
+
+    // ── Load data (safe, won't break buttons) ─────────────
+
+    chrome.storage.sync.get(['presets', 'settings'], function (sync) {
+      chrome.storage.local.get(['savedItems'], function (local) {
+        var presets = (sync && sync.presets) || [];
+        currentSettings = (sync && sync.settings) || {};
+        var savedItems = (local && local.savedItems) || {};
+
+        // Status
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+          if (tabs[0] && tabs[0].url && tabs[0].url.indexOf('therealreal.com') !== -1) {
+            document.getElementById('status-dot').className = 'status-dot on';
           }
         });
 
         // Stats
-        const keys = Object.keys(savedItems);
-        let drops = 0;
-        keys.forEach((k) => {
-          const item = savedItems[k];
-          if (item && parsePrice(item.originalPrice) > 0 && parsePrice(item.currentPrice) > 0 && parsePrice(item.currentPrice) < parsePrice(item.originalPrice)) {
-            drops++;
+        var keys = Object.keys(savedItems);
+        var drops = 0;
+        for (var i = 0; i < keys.length; i++) {
+          var item = savedItems[keys[i]];
+          if (item) {
+            var orig = parsePrice(item.originalPrice);
+            var curr = parsePrice(item.currentPrice);
+            if (orig > 0 && curr > 0 && curr < orig) drops++;
           }
-        });
-
-        document.getElementById('stats-row').innerHTML = `
-          <div class="qs"><div class="qs-num gold">${keys.length}</div><div class="qs-label">Items</div></div>
-          <div class="qs"><div class="qs-num${drops > 0 ? ' green' : ''}">${drops}</div><div class="qs-label">Drops</div></div>
-          <div class="qs"><div class="qs-num">${presets.length}</div><div class="qs-label">Presets</div></div>`;
+        }
+        document.getElementById('stat-items').textContent = keys.length;
+        document.getElementById('stat-drops').textContent = drops;
+        if (drops > 0) document.getElementById('stat-drops').className = 'qs-num green';
+        document.getElementById('stat-presets').textContent = presets.length;
 
         // Presets
-        const pills = document.getElementById('presets-pills');
-        if (presets.length) {
-          pills.innerHTML = presets.map((p) =>
-            `<button class="preset-pill" data-search="${esc(p.search || '')}" data-hash="${esc(p.hash || '')}" data-url="${esc(p.fullUrl || '')}">${esc(p.emoji || '🔖')} ${esc(p.name)}</button>`
-          ).join('');
-
-          pills.querySelectorAll('.preset-pill').forEach((el) => {
-            el.addEventListener('click', () => {
-              chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                if (!tabs[0]) return;
-                const u = new URL(tabs[0].url);
-                const noF = ['/account', '/cart', '/checkout', '/login', '/signup', '/settings', '/orders', '/help'];
-                const ok = u.pathname !== '/' && !noF.some((p) => u.pathname.startsWith(p));
-                const url = (ok && (el.dataset.search || el.dataset.hash))
-                  ? u.origin + u.pathname + el.dataset.search + el.dataset.hash
-                  : el.dataset.url;
-                chrome.tabs.update(tabs[0].id, { url });
-                window.close();
-              });
-            });
-          });
+        var pills = document.getElementById('presets-pills');
+        if (presets.length > 0) {
+          var html = '';
+          for (var j = 0; j < presets.length; j++) {
+            var p = presets[j];
+            var emoji = escHtml(p.emoji || '🔖');
+            var name = escHtml(p.name);
+            var search = escAttr(p.search || '');
+            var hash = escAttr(p.hash || '');
+            var fullUrl = escAttr(p.fullUrl || '');
+            html += '<button class="preset-pill" onclick="applyPreset(\'' + search + '\', \'' + hash + '\', \'' + fullUrl + '\')">' + emoji + ' ' + name + '</button>';
+          }
+          pills.innerHTML = html;
         } else {
           pills.innerHTML = '<span class="no-presets">Save filters from the toolbar on TRR</span>';
         }
 
-        // Settings toggles
-        const compact = document.getElementById('s-compact');
-        const dim = document.getElementById('s-dim');
-        compact.checked = settings.compactView || false;
-        dim.checked = settings.dimSold !== undefined ? settings.dimSold : true;
+        // Settings
+        document.getElementById('s-compact').checked = currentSettings.compactView || false;
+        document.getElementById('s-dim').checked = currentSettings.dimSold !== undefined ? currentSettings.dimSold : true;
+      });
+    });
 
-        compact.addEventListener('change', async () => {
-          settings.compactView = compact.checked;
-          await chrome.storage.sync.set({ settings });
-          chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' }).catch(() => {});
-        });
-        dim.addEventListener('change', async () => {
-          settings.dimSold = dim.checked;
-          await chrome.storage.sync.set({ settings });
-          chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' }).catch(() => {});
-        });
+    function parsePrice(s) {
+      if (!s) return 0;
+      var m = String(s).replace(/,/g, '').match(/[\d.]+/);
+      return m ? parseFloat(m[0]) : 0;
+    }
 
-      } catch (err) {
-        console.error('RealReal Enhancer popup error:', err);
-        // Even if data loading fails, buttons above still work
-      }
-    })();
+    function escHtml(s) {
+      var d = document.createElement('div');
+      d.textContent = s || '';
+      return d.innerHTML;
+    }
+
+    function escAttr(s) {
+      return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
   </script>
 </body>
 </html>
