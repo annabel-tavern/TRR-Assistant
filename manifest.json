@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "RealReal Enhancer",
   "version": "2.0.0",
-  "description": "Shop The RealReal faster with filter presets, item labels, price tracking, a side panel, and a full dashboard",
-  "permissions": ["storage", "activeTab", "sidePanel"],
+  "description": "Shop The RealReal faster with filter presets, item labels, compact view, and smart browsing tools",
+  "permissions": ["storage", "activeTab"],
   "host_permissions": ["https://www.therealreal.com/*"],
   "content_scripts": [
     {
@@ -13,9 +13,6 @@
       "run_at": "document_idle"
     }
   ],
-  "side_panel": {
-    "default_path": "sidepanel.html"
-  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
