@@ -5,7 +5,7 @@ function escAttr(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot
 
 var currentSettings = {};
 
-// ── Tabs ─────────────────────────────────────────
+// Tabs
 document.querySelectorAll('.tab').forEach(function (t) {
   t.addEventListener('click', function () {
     document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
@@ -15,7 +15,7 @@ document.querySelectorAll('.tab').forEach(function (t) {
   });
 });
 
-// ── Load data and render ─────────────────────────
+// Load and render
 chrome.storage.sync.get(['presets', 'settings', 'labels'], function (sync) {
   chrome.storage.local.get(['savedItems'], function (local) {
     var presets = (sync && sync.presets) || [];
@@ -27,20 +27,17 @@ chrome.storage.sync.get(['presets', 'settings', 'labels'], function (sync) {
     currentSettings = (sync && sync.settings) || {};
     var savedItems = (local && local.savedItems) || {};
 
-    // Status dot
+    // Status
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (tabs[0] && tabs[0].url && tabs[0].url.indexOf('therealreal.com') !== -1) {
         document.getElementById('status-dot').className = 'status-dot on';
       }
     });
 
-    // ── Render My Items ────────────────────────────
     renderItems(savedItems, labels);
-
-    // ── Render Presets ─────────────────────────────
     renderPresets(presets);
 
-    // ── Settings ───────────────────────────────────
+    // Settings
     var compact = document.getElementById('s-compact');
     var dim = document.getElementById('s-dim');
     compact.checked = currentSettings.compactView || false;
@@ -59,7 +56,6 @@ chrome.storage.sync.get(['presets', 'settings', 'labels'], function (sync) {
   });
 });
 
-// ── Render saved items grouped by label ──────────
 function renderItems(savedItems, labels) {
   var section = document.getElementById('items-section');
   var keys = Object.keys(savedItems);
@@ -70,7 +66,6 @@ function renderItems(savedItems, labels) {
   }
 
   var html = '';
-
   labels.forEach(function (l) {
     var groupKeys = keys.filter(function (k) {
       return savedItems[k].labels && savedItems[k].labels.indexOf(l.id) !== -1;
@@ -86,11 +81,6 @@ function renderItems(savedItems, labels) {
       var item = savedItems[k];
       if (!item) return;
       html += '<div class="saved-item" data-url="' + escHtml(item.url || '') + '">';
-      if (item.imageUrl) {
-        html += '<img class="si-img" src="' + escHtml(item.imageUrl) + '" loading="lazy">';
-      } else {
-        html += '<div class="si-placeholder"></div>';
-      }
       html += '<div class="si-info">';
       if (item.brand) html += '<div class="si-brand">' + escHtml(item.brand) + '</div>';
       html += '<div class="si-title">' + escHtml(item.title || 'Unknown Item') + '</div>';
@@ -102,29 +92,20 @@ function renderItems(savedItems, labels) {
     html += '</div>';
   });
 
-  if (!html) {
-    section.innerHTML = '<div class="empty">No saved items yet</div>';
-    return;
-  }
-
+  if (!html) { section.innerHTML = '<div class="empty">No saved items yet</div>'; return; }
   section.innerHTML = html;
 
-  // Click to navigate to item
   section.querySelectorAll('.saved-item').forEach(function (el) {
     el.addEventListener('click', function () {
       if (el.dataset.url) {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-          if (tabs[0]) {
-            chrome.tabs.update(tabs[0].id, { url: el.dataset.url });
-            window.close();
-          }
+          if (tabs[0]) { chrome.tabs.update(tabs[0].id, { url: el.dataset.url }); window.close(); }
         });
       }
     });
   });
 }
 
-// ── Render presets ───────────────────────────────
 function renderPresets(presets) {
   var pills = document.getElementById('presets-pills');
   if (presets.length > 0) {
@@ -134,7 +115,6 @@ function renderPresets(presets) {
       html += '<button class="preset-pill" data-search="' + escAttr(p.search || '') + '" data-hash="' + escAttr(p.hash || '') + '" data-url="' + escAttr(p.fullUrl || '') + '">' + escHtml(p.emoji || '🔖') + ' ' + escHtml(p.name) + '</button>';
     }
     pills.innerHTML = html;
-
     pills.querySelectorAll('.preset-pill').forEach(function (el) {
       el.addEventListener('click', function () {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -143,8 +123,7 @@ function renderPresets(presets) {
           var noF = ['/account', '/cart', '/checkout', '/login', '/signup', '/settings', '/orders', '/help'];
           var ok = u.pathname !== '/' && !noF.some(function (p) { return u.pathname.startsWith(p); });
           var url = (ok && (el.dataset.search || el.dataset.hash)) ? u.origin + u.pathname + el.dataset.search + el.dataset.hash : el.dataset.url;
-          chrome.tabs.update(tabs[0].id, { url: url });
-          window.close();
+          chrome.tabs.update(tabs[0].id, { url: url }); window.close();
         });
       });
     });
