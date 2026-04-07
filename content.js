@@ -250,11 +250,21 @@
   function applyDimSold() { document.body.classList.toggle('trr-enhancer-dim-sold', settings.dimSold); }
   function applySettings() { applyCompactView(); applyDimSold(); }
 
-  function observeForSoldItems() {
+ function observeForSoldItems() {
     function scan() {
+      // Strategy 1: Target TRR's specific sold label class
+      document.querySelectorAll('.product-card__status-label').forEach(function (label) {
+        if (/sold/i.test(label.textContent)) {
+          var card = label.closest('.product-card') || label.closest('[class^="product-card"]') || label.closest('[class*="card"]');
+          if (card) card.setAttribute('data-trr-sold', 'true');
+        }
+      });
+      // Strategy 2: Fallback — check any element containing SOLD near product links
       document.querySelectorAll('a[href*="/products/"]').forEach(function (l) {
-        var c = l.closest('[class*="card"],[class*="Card"],[class*="product"],[class*="Product"],[class*="item"],[class*="Item"],[data-testid]') || l.parentElement;
-        if (c && /\bSOLD\b/.test(c.textContent || '')) c.setAttribute('data-trr-sold', 'true');
+        var c = l.closest('.product-card') || l.closest('[class*="card"]') || l.parentElement;
+        if (c && !c.hasAttribute('data-trr-sold') && /\bSOLD\b/i.test(c.textContent || '')) {
+          c.setAttribute('data-trr-sold', 'true');
+        }
       });
     }
     scan();
