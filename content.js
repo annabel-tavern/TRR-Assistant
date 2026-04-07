@@ -158,10 +158,25 @@
     var url;
     if (full) { url = p.fullUrl; showToast('↗ ' + p.name); }
     else if (isShopPage(location.pathname) && (p.search || p.hash)) {
-      url = location.origin + location.pathname + (p.search || '') + (p.hash || '');
+      // Check if we're on a search results page (/products?keywords=...)
+      // If so, preserve the keywords parameter so TRR knows what was searched
+      if (location.pathname === '/products' || location.pathname.startsWith('/products/')) {
+        var currentUrl = new URL(location.href);
+        var keywords = currentUrl.searchParams.get('keywords');
+        if (keywords) {
+          var presetParams = new URLSearchParams(p.search);
+          presetParams.set('keywords', keywords);
+          url = location.origin + location.pathname + '?' + presetParams.toString() + (p.hash || '');
+        } else {
+          url = location.origin + location.pathname + (p.search || '') + (p.hash || '');
+        }
+      } else {
+        url = location.origin + location.pathname + (p.search || '') + (p.hash || '');
+      }
       showToast('✓ Applied "' + p.name + '"');
     } else { url = p.fullUrl; showToast('↗ ' + p.name); }
     setTimeout(function () { location.href = url; }, 150);
+  
   }
 
   function showSaveModal() {
