@@ -1,11 +1,16 @@
-// RealReal Enhancer - Popup (external JS, Manifest V3 compatible)
+// RealReal Enhancer - Popup (v2.1 — custom labels)
+
+var LABEL_COLORS = ['#27ae60', '#3498db', '#e74c3c', '#9b59b6', '#e67e22', '#1abc9c', '#f39c12', '#e91e63', '#2ecc71', '#8e44ad'];
+var LABEL_EMOJIS = ['🛒', '📌', '🎁', '💡', '👀', '🔥', '💰', '🏷️', '💅', '🧥', '👗', '👠', '👜', '💎', '✨', '⭐', '🛍️', '👒', '🎀', '💝', '📦', '🌟', '🔔', '💌'];
+
+var currentSettings = {};
+var currentLabels = [];
+var currentSavedItems = {};
 
 function escHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function escAttr(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
-var currentSettings = {};
-
-// Tabs
+// ── Tabs ─────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(function (t) {
   t.addEventListener('click', function () {
     document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
@@ -15,17 +20,17 @@ document.querySelectorAll('.tab').forEach(function (t) {
   });
 });
 
-// Load and render
+// ── Load and render ──────────────────────────────
 chrome.storage.sync.get(['presets', 'settings', 'labels'], function (sync) {
   chrome.storage.local.get(['savedItems'], function (local) {
     var presets = (sync && sync.presets) || [];
-    var labels = (sync && sync.labels) || [
+    currentLabels = (sync && sync.labels) || [
       { id: 'want-to-buy', name: 'Want to Buy', emoji: '🛒', color: '#27ae60' },
       { id: 'reference', name: 'Reference', emoji: '📌', color: '#3498db' },
       { id: 'gift', name: 'For a Gift', emoji: '🎁', color: '#e74c3c' }
     ];
     currentSettings = (sync && sync.settings) || {};
-    var savedItems = (local && local.savedItems) || {};
+    currentSavedItems = (local && local.savedItems) || {};
 
     // Status
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -34,28 +39,16 @@ chrome.storage.sync.get(['presets', 'settings', 'labels'], function (sync) {
       }
     });
 
-    renderItems(savedItems, labels);
+    renderItems(currentSavedItems, currentLabels);
     renderPresets(presets);
-
-    // Settings
-    var compact = document.getElementById('s-compact');
-    var dim = document.getElementById('s-dim');
-    compact.checked = currentSettings.compactView || false;
-    dim.checked = currentSettings.dimSold !== undefined ? currentSettings.dimSold : true;
-
-    compact.addEventListener('change', function () {
-      currentSettings.compactView = compact.checked;
-      chrome.storage.sync.set({ settings: currentSettings });
-      chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' });
-    });
-    dim.addEventListener('change', function () {
-      currentSettings.dimSold = dim.checked;
-      chrome.storage.sync.set({ settings: currentSettings });
-      chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' });
-    });
+    renderLabelsManager();
+    setupEmojiPicker();
+    setupAddLabel();
+    setupSettings();
   });
 });
 
+// ── Render My Items ──────────────────────────────
 function renderItems(savedItems, labels) {
   var section = document.getElementById('items-section');
   var keys = Object.keys(savedItems);
@@ -88,7 +81,6 @@ function renderItems(savedItems, labels) {
       if (item.price) html += '<span class="si-price">' + escHtml(item.price) + '</span>';
       html += '</div>';
     });
-
     html += '</div>';
   });
 
@@ -106,6 +98,7 @@ function renderItems(savedItems, labels) {
   });
 }
 
+// ── Render Presets ────────────────────────────────
 function renderPresets(presets) {
   var pills = document.getElementById('presets-pills');
   if (presets.length > 0) {
@@ -121,7 +114,7 @@ function renderPresets(presets) {
           if (!tabs[0]) return;
           var u = new URL(tabs[0].url);
           var noF = ['/account', '/cart', '/checkout', '/login', '/signup', '/settings', '/orders', '/help'];
-         var ok = u.pathname !== '/' && !noF.some(function (p) { return u.pathname.startsWith(p); });
+          var ok = u.pathname !== '/' && !noF.some(function (p) { return u.pathname.startsWith(p); });
           var url;
           if (ok && (el.dataset.search || el.dataset.hash)) {
             if (u.pathname === '/products' || u.pathname.startsWith('/products/')) {
@@ -146,4 +139,131 @@ function renderPresets(presets) {
   } else {
     pills.innerHTML = '<span class="no-presets">Save filters from the toolbar on TRR</span>';
   }
+}
+
+// ── Labels Manager ───────────────────────────────
+function renderLabelsManager() {
+  var list = document.getElementById('labels-list');
+  var keys = Object.keys(currentSavedItems);
+
+  var html = '';
+  currentLabels.forEach(function (l, i) {
+    // Count items with this label
+    var count = keys.filter(function (k) {
+      return currentSavedItems[k].labels && currentSavedItems[k].labels.indexOf(l.id) !== -1;
+    }).length;
+
+    html += '<div class="label-item" data-idx="' + i + '">';
+    html += '<span class="label-item-dot" style="background:' + l.color + '"></span>';
+    html += '<span class="label-item-emoji">' + l.emoji + '</span>';
+    html += '<span class="label-item-name">' + escHtml(l.name) + '</span>';
+    if (count > 0) html += '<span class="label-item-count">' + count + ' items</span>';
+    html += '<button class="label-item-del" data-idx="' + i + '" title="Delete label">✕</button>';
+    html += '</div>';
+  });
+
+  list.innerHTML = html;
+
+  // Delete handlers
+  list.querySelectorAll('.label-item-del').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var idx = parseInt(btn.dataset.idx);
+      var labelId = currentLabels[idx].id;
+
+      // Remove this label from all saved items
+      var keys = Object.keys(currentSavedItems);
+      keys.forEach(function (k) {
+        if (currentSavedItems[k].labels) {
+          currentSavedItems[k].labels = currentSavedItems[k].labels.filter(function (l) { return l !== labelId; });
+          if (currentSavedItems[k].labels.length === 0) delete currentSavedItems[k];
+        }
+      });
+
+      currentLabels.splice(idx, 1);
+      chrome.storage.sync.set({ labels: currentLabels });
+      chrome.storage.local.set({ savedItems: currentSavedItems });
+      chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' });
+      renderLabelsManager();
+      renderItems(currentSavedItems, currentLabels);
+    });
+  });
+}
+
+// ── Emoji Picker ─────────────────────────────────
+var selectedEmoji = '💡';
+
+function setupEmojiPicker() {
+  var picker = document.getElementById('emoji-picker');
+  var html = '';
+  LABEL_EMOJIS.forEach(function (e) {
+    // Skip emojis already used by existing labels
+    var used = currentLabels.some(function (l) { return l.emoji === e; });
+    if (used) return;
+    html += '<button class="emoji-pick' + (e === selectedEmoji ? ' sel' : '') + '" data-emoji="' + e + '">' + e + '</button>';
+  });
+  picker.innerHTML = html;
+
+  // Select first available emoji by default
+  var first = picker.querySelector('.emoji-pick');
+  if (first) {
+    first.classList.add('sel');
+    selectedEmoji = first.dataset.emoji;
+  }
+
+  picker.querySelectorAll('.emoji-pick').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      picker.querySelectorAll('.emoji-pick').forEach(function (b) { b.classList.remove('sel'); });
+      btn.classList.add('sel');
+      selectedEmoji = btn.dataset.emoji;
+    });
+  });
+}
+
+// ── Add Label ────────────────────────────────────
+function setupAddLabel() {
+  var nameInput = document.getElementById('new-label-name');
+  var addBtn = document.getElementById('add-label-btn');
+
+  function addLabel() {
+    var name = nameInput.value.trim();
+    if (!name) return;
+
+    // Pick a color (cycle through available colors)
+    var colorIdx = currentLabels.length % LABEL_COLORS.length;
+
+    currentLabels.push({
+      id: 'custom-' + Date.now(),
+      name: name,
+      emoji: selectedEmoji,
+      color: LABEL_COLORS[colorIdx]
+    });
+
+    chrome.storage.sync.set({ labels: currentLabels });
+    chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' });
+    nameInput.value = '';
+    renderLabelsManager();
+    setupEmojiPicker(); // refresh to remove used emoji
+  }
+
+  addBtn.addEventListener('click', addLabel);
+  nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') addLabel(); });
+}
+
+// ── Settings ─────────────────────────────────────
+function setupSettings() {
+  var compact = document.getElementById('s-compact');
+  var dim = document.getElementById('s-dim');
+  compact.checked = currentSettings.compactView || false;
+  dim.checked = currentSettings.dimSold !== undefined ? currentSettings.dimSold : true;
+
+  compact.addEventListener('change', function () {
+    currentSettings.compactView = compact.checked;
+    chrome.storage.sync.set({ settings: currentSettings });
+    chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' });
+  });
+  dim.addEventListener('change', function () {
+    currentSettings.dimSold = dim.checked;
+    chrome.storage.sync.set({ settings: currentSettings });
+    chrome.runtime.sendMessage({ type: 'REFRESH_CONTENT' });
+  });
 }

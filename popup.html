@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>RealReal Enhancer</title>
   <style>
-    :root { --bg: #111; --surface: #1a1a1a; --surface2: #222; --border: #2a2a2a; --text: #f0f0f0; --text2: #aaa; --text3: #666; --gold: #c8a97e; --green: #27ae60; }
+    :root { --bg: #111; --surface: #1a1a1a; --surface2: #222; --border: #2a2a2a; --text: #f0f0f0; --text2: #aaa; --text3: #666; --gold: #c8a97e; --green: #27ae60; --red: #e74c3c; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { width: 320px; max-height: 500px; overflow-y: auto; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; -webkit-font-smoothing: antialiased; }
 
@@ -23,17 +23,18 @@
     .section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
     .section-title { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
 
+    /* Presets */
     .presets-pills { display: flex; flex-wrap: wrap; gap: 6px; }
     .preset-pill { display: flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: inherit; }
     .preset-pill:hover { border-color: var(--gold); color: var(--text); }
     .no-presets { font-size: 11px; color: var(--text3); font-style: italic; }
 
+    /* Saved Items */
     .label-group { margin-bottom: 10px; }
     .label-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
     .label-dot { width: 8px; height: 8px; border-radius: 50%; }
     .label-name { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
     .label-count { font-size: 10px; color: var(--text3); }
-
     .saved-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; margin-bottom: 2px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
     .saved-item:hover { background: var(--surface2); }
     .si-info { flex: 1; min-width: 0; }
@@ -43,6 +44,32 @@
 
     .empty { font-size: 11px; color: var(--text3); text-align: center; padding: 20px 0; font-style: italic; }
 
+    /* Label Management */
+    .label-item { display: flex; align-items: center; gap: 8px; padding: 8px; margin-bottom: 4px; border-radius: 6px; }
+    .label-item:hover { background: var(--surface2); }
+    .label-item-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .label-item-emoji { font-size: 14px; flex-shrink: 0; }
+    .label-item-name { font-size: 12px; color: var(--text); flex: 1; }
+    .label-item-count { font-size: 10px; color: var(--text3); }
+    .label-item-del { background: none; border: none; color: var(--text3); font-size: 12px; cursor: pointer; padding: 2px 4px; font-family: inherit; opacity: 0; transition: all 0.15s; }
+    .label-item:hover .label-item-del { opacity: 1; }
+    .label-item-del:hover { color: var(--red); }
+
+    .add-label { display: flex; gap: 6px; margin-top: 10px; }
+    .add-label input { flex: 1; padding: 7px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12px; font-family: inherit; outline: none; }
+    .add-label input:focus { border-color: var(--gold); }
+    .add-label input::placeholder { color: var(--text3); }
+    .add-label button { padding: 7px 12px; background: var(--gold); border: none; border-radius: 8px; color: #111; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .add-label button:hover { background: #d4b88f; }
+
+    .emoji-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; }
+    .emoji-pick { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 2px solid transparent; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+    .emoji-pick:hover { background: var(--surface2); border-color: var(--text3); }
+    .emoji-pick.sel { border-color: var(--gold); background: var(--surface2); }
+
+    .label-hint { font-size: 10px; color: var(--text3); margin-top: 10px; line-height: 1.4; }
+
+    /* Settings */
     .settings-strip { display: flex; padding: 10px 16px; gap: 14px; border-top: 1px solid var(--border); background: var(--surface); }
     .ss-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
     .ss-toggle input { display: none; }
@@ -63,6 +90,7 @@
   <div class="tabs">
     <div class="tab active" data-tab="items">My Items</div>
     <div class="tab" data-tab="presets">Presets</div>
+    <div class="tab" data-tab="labels">Labels</div>
   </div>
   <div class="tab-content active" id="tab-items">
     <div class="section" id="items-section"><span class="empty">Loading...</span></div>
@@ -71,6 +99,19 @@
     <div class="section">
       <div class="section-title">Quick Apply Preset</div>
       <div class="presets-pills" id="presets-pills"><span class="no-presets">Loading...</span></div>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-labels">
+    <div class="section">
+      <div class="section-title">Your Labels</div>
+      <div id="labels-list"></div>
+      <div class="section-title" style="margin-top:14px">Add New Label</div>
+      <div class="emoji-row" id="emoji-picker"></div>
+      <div class="add-label">
+        <input type="text" id="new-label-name" placeholder="Label name..." maxlength="20">
+        <button id="add-label-btn">+ Add</button>
+      </div>
+      <div class="label-hint">New labels appear as emoji buttons when you hover over items on The RealReal.</div>
     </div>
   </div>
   <div class="settings-strip">
