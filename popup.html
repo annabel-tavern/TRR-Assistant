@@ -6,24 +6,50 @@
   <style>
     :root { --bg: #111; --surface: #1a1a1a; --surface2: #222; --border: #2a2a2a; --text: #f0f0f0; --text2: #aaa; --text3: #666; --gold: #c8a97e; --green: #27ae60; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { width: 300px; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; -webkit-font-smoothing: antialiased; }
+    body { width: 320px; max-height: 500px; overflow-y: auto; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; -webkit-font-smoothing: antialiased; }
+
     .header { padding: 14px 16px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
     .header h1 { font-size: 12px; font-weight: 700; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; flex: 1; }
     .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #555; }
     .status-dot.on { background: var(--green); }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border); }
-    .qs { padding: 12px 8px; text-align: center; border-right: 1px solid var(--border); }
-    .qs:last-child { border-right: none; }
-    .qs-num { font-size: 18px; font-weight: 700; }
-    .qs-num.gold { color: var(--gold); }
-    .qs-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .tab { flex: 1; padding: 9px; text-align: center; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .tab:hover { color: var(--text2); }
+    .tab.active { color: var(--gold); border-color: var(--gold); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     .section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
     .section-title { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+    /* Presets */
     .presets-pills { display: flex; flex-wrap: wrap; gap: 6px; }
     .preset-pill { display: flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: inherit; }
     .preset-pill:hover { border-color: var(--gold); color: var(--text); }
     .no-presets { font-size: 11px; color: var(--text3); font-style: italic; }
-    .settings-strip { display: flex; padding: 10px 16px; gap: 14px; background: var(--surface); }
+
+    /* Saved Items */
+    .label-group { margin-bottom: 10px; }
+    .label-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .label-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .label-name { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .label-count { font-size: 10px; color: var(--text3); }
+
+    .saved-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 3px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+    .saved-item:hover { background: var(--surface2); }
+    .si-img { width: 36px; height: 48px; border-radius: 4px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
+    .si-placeholder { width: 36px; height: 48px; border-radius: 4px; background: var(--surface2); flex-shrink: 0; }
+    .si-info { flex: 1; min-width: 0; }
+    .si-title { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .si-brand { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.3px; }
+    .si-price { font-size: 11px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+
+    .empty { font-size: 11px; color: var(--text3); text-align: center; padding: 20px 0; font-style: italic; }
+
+    /* Settings */
+    .settings-strip { display: flex; padding: 10px 16px; gap: 14px; border-top: 1px solid var(--border); background: var(--surface); }
     .ss-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
     .ss-toggle input { display: none; }
     .ss-slider { position: relative; width: 28px; height: 16px; background: #444; border-radius: 8px; transition: background 0.2s; }
@@ -40,19 +66,30 @@
     <h1>RealReal Enhancer</h1>
     <span class="status-dot" id="status-dot"></span>
   </div>
-  <div class="stats-row">
-    <div class="qs"><div class="qs-num gold" id="stat-items">-</div><div class="qs-label">Saved</div></div>
-    <div class="qs"><div class="qs-num" id="stat-labels">-</div><div class="qs-label">Labels</div></div>
-    <div class="qs"><div class="qs-num" id="stat-presets">-</div><div class="qs-label">Presets</div></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="items">My Items</div>
+    <div class="tab" data-tab="presets">Presets</div>
   </div>
-  <div class="section">
-    <div class="section-title">Quick Apply Preset</div>
-    <div class="presets-pills" id="presets-pills"><span class="no-presets">Loading...</span></div>
+
+  <div class="tab-content active" id="tab-items">
+    <div class="section" id="items-section">
+      <span class="empty">Loading...</span>
+    </div>
   </div>
+
+  <div class="tab-content" id="tab-presets">
+    <div class="section">
+      <div class="section-title">Quick Apply Preset</div>
+      <div class="presets-pills" id="presets-pills"><span class="no-presets">Loading...</span></div>
+    </div>
+  </div>
+
   <div class="settings-strip">
     <label class="ss-toggle"><input type="checkbox" id="s-compact"><span class="ss-slider"></span><span class="ss-label">Compact</span></label>
     <label class="ss-toggle"><input type="checkbox" id="s-dim"><span class="ss-slider"></span><span class="ss-label">Dim Sold</span></label>
   </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
