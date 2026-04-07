@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RealReal Enhancer — For people who have taste but not time.</title>
+  <meta name="description" content="A free Chrome extension that makes shopping The RealReal way faster.">
+  <style>
+    :root {
+      --bg: #0c0c0c; --surface: #151515; --surface2: #1c1c1c;
+      --border: #252525; --text: #f0ede8; --text2: #a09a90;
+      --text3: #5a5650; --gold: #c8a97e; --gold-light: #dcc4a0;
+      --gold-dim: rgba(200,169,126,0.08); --green: #6dba7d;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased; line-height: 1.6;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+    /* Nav */
+    nav { padding: 20px 0; display: flex; align-items: center; gap: 10px; }
+    .nav-logo { font-size: 20px; }
+    .nav-name { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-cta {
+      margin-left: auto; padding: 10px 24px; background: var(--gold); color: #0c0c0c;
+      border-radius: 24px; text-decoration: none; font-size: 13px; font-weight: 700;
+      transition: background 0.2s;
+    }
+    .nav-cta:hover { background: var(--gold-light); }
+
+    /* Hero */
+    .hero { padding: 70px 0 50px; }
+    .hero-headline {
+      font-size: clamp(30px, 6vw, 50px); font-weight: 800;
+      line-height: 1.1; letter-spacing: -1px; margin-bottom: 20px;
+    }
+    .hero-headline em { font-style: normal; color: var(--gold); }
+    .hero-sub {
+      font-size: clamp(15px, 2.5vw, 18px); color: var(--text2);
+      max-width: 500px; line-height: 1.6; margin-bottom: 32px;
+    }
+    .hero-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 36px; background: var(--gold); color: #0c0c0c;
+      border-radius: 30px; text-decoration: none; font-size: 15px; font-weight: 700;
+      transition: all 0.2s;
+    }
+    .hero-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+    .hero-note { margin-top: 12px; font-size: 12px; color: var(--text3); }
+
+    .divider { width: 50px; height: 1px; background: var(--border); margin: 50px 0; }
+
+    /* Casual text sections */
+    .prose { max-width: 600px; }
+    .prose h2 {
+      font-size: clamp(22px, 4vw, 32px); font-weight: 800;
+      margin-bottom: 16px; letter-spacing: -0.5px;
+    }
+    .prose p {
+      font-size: 14px; color: var(--text2); line-height: 1.8; margin-bottom: 16px;
+    }
+    .prose p strong { color: var(--text); }
+    .prose p em { color: var(--gold); font-style: normal; }
+
+    .label { font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+
+    /* Feature list — casual style */
+    .feature-list { margin: 24px 0; }
+    .fl-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px 0; border-bottom: 1px solid var(--border);
+    }
+    .fl-item:last-child { border-bottom: none; }
+    .fl-emoji { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .fl-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .fl-desc { font-size: 13px; color: var(--text2); line-height: 1.5; margin-top: 2px; }
+
+    /* Install steps */
+    .steps { margin: 20px 0; }
+    .step {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 16px; margin-bottom: 8px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--gold-dim); color: var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; flex-shrink: 0;
+    }
+    .step-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .step-text strong { color: var(--text); }
+    .step-text code {
+      background: var(--surface2); padding: 2px 6px; border-radius: 4px;
+      font-size: 11px; color: var(--gold);
+    }
+    .step-text a { color: var(--gold); text-decoration: none; }
+    .reassure { font-size: 12px; color: var(--text3); margin-top: 12px; font-style: italic; }
+
+    /* Roadmap */
+    .roadmap-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0;
+    }
+    .roadmap-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px;
+    }
+    .ri-emoji { font-size: 18px; margin-bottom: 6px; }
+    .ri-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .ri-desc { font-size: 11px; color: var(--text3); line-height: 1.4; margin-top: 3px; }
+
+    /* Screenshot */
+    .screenshot {
+      background: var(--surface); border: 1px dashed var(--border);
+      border-radius: 10px; padding: 40px 20px; text-align: center;
+      color: var(--text3); font-size: 12px; font-style: italic; margin: 24px 0;
+    }
+    .screenshot img { max-width: 100%; border-radius: 8px; }
+
+    /* Final CTA */
+    .final { padding: 60px 0; text-align: center; }
+    .final h2 { font-size: clamp(20px, 4vw, 28px); font-weight: 800; margin-bottom: 20px; }
+
+    /* Footer */
+    footer {
+      padding: 40px 0; border-top: 1px solid var(--border); text-align: center;
+    }
+    .footer-text { font-size: 12px; color: var(--text3); }
+    .footer-text a { color: var(--text2); text-decoration: none; }
+    .footer-text a:hover { color: var(--gold); }
+    .footer-tagline { font-size: 13px; color: var(--text3); margin-top: 6px; font-style: italic; }
+
+    @media (max-width: 600px) {
+      .hero { padding: 40px 0 30px; }
+      .roadmap-grid { grid-template-columns: 1fr; }
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .animate { animation: fadeUp 0.5s ease forwards; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <nav>
+      <span class="nav-logo">⚡</span>
+      <span class="nav-name">RealReal Enhancer</span>
+      <a class="nav-cta" href="https://github.com/annabel-tavern/TRR-Assistant/releases/latest">Download</a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero animate">
+      <h1 class="hero-headline">For people who have <em>taste</em> but not <em>time.</em></h1>
+      <p class="hero-sub">I got annoyed with how The RealReal works, so I learned to code and built a Chrome extension that fixes it. This is my first ever coding project. It's free.</p>
+      <a class="hero-cta" href="https://github.com/annabel-tavern/TRR-Assistant/releases/latest">⚡ Get it free</a>
+      <p class="hero-note">No account, no signup, no catch.</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- What it does -->
+    <section class="prose">
+      <div class="label">What it does</div>
+      <h2>Because life's too short to re-filter Ganni every time.</h2>
+      <p>If you shop The RealReal, you already know. You search a designer, set your filters, find some stuff. Then you search another designer and <strong>set all the same filters again</strong>. You scroll past a bunch of sold items. You favorite something but forget why. It's a whole thing.</p>
+      <p>These are all problems The RealReal probably should have fixed themselves. They didn't, so I did.</p>
+
+      <div class="feature-list">
+        <div class="fl-item">
+          <span class="fl-emoji">🔖</span>
+          <div>
+            <div class="fl-name">Filter Presets</div>
+            <div class="fl-desc">Save your filters once, apply them to any page with one click. Switch designers without starting over.</div>
+          </div>
+        </div>
+        <div class="fl-item">
+          <span class="fl-emoji">🏷️</span>
+          <div>
+            <div class="fl-name">Labels</div>
+            <div class="fl-desc">Tag items as "want to buy," "for a gift," "style inspo" — or make your own labels. Colored dots show on items you've tagged.</div>
+          </div>
+        </div>
+        <div class="fl-item">
+          <span class="fl-emoji">👁️</span>
+          <div>
+            <div class="fl-name">Dim Sold</div>
+            <div class="fl-desc">Fades out sold items. They're still there for inspo, just not in your face.</div>
+          </div>
+        </div>
+        <div class="fl-item">
+          <span class="fl-emoji">⚡</span>
+          <div>
+            <div class="fl-name">Compact View</div>
+            <div class="fl-desc">More items per row. Scan faster, scroll less.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screenshot -->
+    <div class="screenshot">
+      Screenshots coming soon!
+      <!-- Replace with: <img src="screenshot.png" alt="RealReal Enhancer in action"> -->
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Install -->
+    <section class="prose">
+      <div class="label">Get it</div>
+      <h2>Ok here's how to install it.</h2>
+      <p>It's a Chrome extension. If you've never installed one outside the Chrome Web Store before, don't worry — it sounds more technical than it is. I promise.</p>
+
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <span class="step-text"><strong><a href="https://github.com/annabel-tavern/TRR-Assistant/releases/latest">Download the ZIP file</a></strong> and unzip it. You'll get a folder with some files in it. Don't worry about what they are.</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span class="step-text">Open Chrome. Type <code>chrome://extensions</code> in the address bar and hit enter. It'll open a settings page.</span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span class="step-text">In the <strong>top right corner</strong>, turn on <strong>Developer mode</strong>. It's just a toggle. This sounds scary but it's totally normal — it just means "let me install my own extensions."</span>
+        </div>
+        <div class="step">
+          <span class="step-num">4</span>
+          <span class="step-text">Click <strong>Load unpacked</strong> (top left). Select the folder you unzipped. Done.</span>
+        </div>
+        <div class="step">
+          <span class="step-num">5</span>
+          <span class="step-text">Go to <a href="https://therealreal.com" target="_blank">therealreal.com</a>. You'll see a dark toolbar at the bottom of the page. That's the extension. Start shopping.</span>
+        </div>
+      </div>
+      <p class="reassure">The whole thing takes about 2 minutes. If you get stuck, text me.</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Story -->
+    <section class="prose">
+      <div class="label">The backstory</div>
+      <h2>I'd never written a line of code before this.</h2>
+      <p>I'm not a developer. I just shop on The RealReal a lot, and every week I'd run into the same annoying problems — re-entering my filters over and over, losing track of things I wanted, scrolling past a wall of sold items to find anything available.</p>
+      <p>At some point I thought, <strong>why doesn't The RealReal just... fix this?</strong> And then I thought, ok, what if I just fix it myself?</p>
+      <p>So I coded it with <a href="https://claude.ai" style="color:var(--gold)">Claude</a>, learned how Chrome extensions work, broke a lot of stuff, and eventually got it working. This is literally my first coding project ever. It's on <a href="https://github.com/annabel-tavern/TRR-Assistant" style="color:var(--gold)">GitHub</a> if you want to look at the code, suggest features, or tell me it's broken.</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Roadmap -->
+    <section class="prose">
+      <div class="label">Coming soon</div>
+      <h2>I'm still building this.</h2>
+      <div class="roadmap-grid">
+        <div class="roadmap-item">
+          <div class="ri-emoji">📉</div>
+          <div class="ri-name">Price Tracking</div>
+          <div class="ri-desc">Get notified when tagged items drop in price.</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="ri-emoji">📊</div>
+          <div class="ri-name">Dashboard</div>
+          <div class="ri-desc">Full-page view of all your saved items.</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="ri-emoji">🎵</div>
+          <div class="ri-name">Music + Side Panel</div>
+          <div class="ri-desc">Fashion show playlists while you browse.</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="ri-emoji">🔗</div>
+          <div class="ri-name">Wishlists</div>
+          <div class="ri-desc">Share your tagged items as a gift hint.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Final CTA -->
+    <section class="final">
+      <h2>Wanna try it?</h2>
+      <a class="hero-cta" href="https://github.com/annabel-tavern/TRR-Assistant/releases/latest">⚡ Get it free</a>
+      <p class="hero-note">Free, open source, made by someone who just wanted to shop in peace.</p>
+    </section>
+
+    <footer>
+      <p class="footer-text">
+        Made by <a href="https://github.com/annabel-tavern">Annabel Snidow</a> ·
+        <a href="https://github.com/annabel-tavern/TRR-Assistant">GitHub</a>
+      </p>
+      <p class="footer-tagline">The extension The RealReal should've built themselves.</p>
+    </footer>
+  </div>
+
+</body>
+</html>
