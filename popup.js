@@ -121,8 +121,24 @@ function renderPresets(presets) {
           if (!tabs[0]) return;
           var u = new URL(tabs[0].url);
           var noF = ['/account', '/cart', '/checkout', '/login', '/signup', '/settings', '/orders', '/help'];
-          var ok = u.pathname !== '/' && !noF.some(function (p) { return u.pathname.startsWith(p); });
-          var url = (ok && (el.dataset.search || el.dataset.hash)) ? u.origin + u.pathname + el.dataset.search + el.dataset.hash : el.dataset.url;
+         var ok = u.pathname !== '/' && !noF.some(function (p) { return u.pathname.startsWith(p); });
+          var url;
+          if (ok && (el.dataset.search || el.dataset.hash)) {
+            if (u.pathname === '/products' || u.pathname.startsWith('/products/')) {
+              var kw = u.searchParams.get('keywords');
+              if (kw) {
+                var pp = new URLSearchParams(el.dataset.search);
+                pp.set('keywords', kw);
+                url = u.origin + u.pathname + '?' + pp.toString() + (el.dataset.hash || '');
+              } else {
+                url = u.origin + u.pathname + el.dataset.search + (el.dataset.hash || '');
+              }
+            } else {
+              url = u.origin + u.pathname + el.dataset.search + (el.dataset.hash || '');
+            }
+          } else {
+            url = el.dataset.url;
+          }
           chrome.tabs.update(tabs[0].id, { url: url }); window.close();
         });
       });
