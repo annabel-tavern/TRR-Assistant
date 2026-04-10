@@ -5,8 +5,7 @@
   if (document.getElementById('trr-enhancer-toolbar')) return;
 
   var presets = [];
-  var settings = { compactView: false, dimSold: true, toolbarCollapsed: false };
-  var editingPresetId = null;
+  var settings = { compactView: false, dimSold: true, toolbarCollapsed: false, defaultPresetId: null };
 
   function esc(str) { var d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
 
@@ -44,14 +43,53 @@
   function saveSettings() { chrome.storage.sync.set({ settings: settings }); }
   function savePresets() { chrome.storage.sync.set({ presets: presets }); }
 
-  function init() {
-    loadData(function () {
-      createToolbar();
-      applySettings();
-      observeForSoldItems();
-      listenForMessages();
-    });
-  }
+  var defaultPresetTimeout = null;
+
+ function init() {
+ loadData(function () {
+ createToolbar();
+ applySettings();
+ observeForSoldItems();
+ listenForMessages();
+ applyDefaultPreset();
+ });
+ }
+
+ function isFilterablePage(path) {
+   // Allowlist approach: only apply defaults on pages we KNOW are browseable
+   var allowed = ['/designers', '/products', '/shop', '/sales', '/browse', '/collections'];
+   return allowed.some(function (p) { return path.startsWith(p); });
+ }
+
+ function applyDefaultPreset() {
+   // Only apply once per tab session
+   if (sessionStorage.getItem('trr-default-applied')) return;
+
+   // Check if a default preset exists
+   if (!settings.defaultPresetId) return;
+   var preset = presets.find(function (p) { return p.id === settings.defaultPresetId; });
+   if (!preset) return;
+
+   // Only apply on known filterable pages
+   if (!isFilterablePage(location.pathname)) return;
+
+   // Don't apply if page already has filters (user is already filtering)
+   if (location.search) return;
+
+   // Mark as applied for this tab
+   sessionStorage.setItem('trr-default-applied', 'true');
+
+   // Short delay for page stability, then apply and show toast AFTER
+   defaultPresetTimeout = setTimeout(function () {
+     navPreset(preset, false);
+     // Toast shows after navigation, so user sees it on the filtered page
+   }, 200);
+ }
+
+ // Cancel pending default if user navigates away before it fires
+ window.addEventListener('beforeunload', function () {
+   if (defaultPresetTimeout) clearTimeout(defaultPresetTimeout);
+ });
 
   function createToolbar() {
     var tb = document.createElement('div');
@@ -69,9 +107,11 @@
         '<span class="trr-preset-icon">' + esc(p.emoji || '🔖') + '</span>' +
         '<span class="trr-preset-name">' + esc(p.name) + '</span></button>' +
         '<div class="trr-preset-actions">' +
-        '<button class="trr-pa-edit" data-pid="' + esc(p.id) + '" title="Edit">✎</button>' +
-        '<button class="trr-pa-del" data-pid="' + esc(p.id) + '" title="Delete">✕</button>' +
-        '</div></div>';
+       '<div class="trr-preset-actions">' +
+ '<button class="trr-pa-default" data-pid="' + esc(p.id) + '" title="' + (settings.defaultPresetId === p.id ? 'Remove as default' : 'Set as default') + '">' + (settings.defaultPresetId === p.id ? '★' : '☆') + '</button>' +
+ '<button class="trr-pa-edit" data-pid="' + esc(p.id) + '" title="Edit">✎</button>' +
+ '<button class="trr-pa-del" data-pid="' + esc(p.id) + '" title="Delete">✕</button>' +
+ '</div></div>';
     }).join('');
 
     return '<div class="trr-toolbar-inner">' +
@@ -128,6 +168,22 @@
       b.addEventListener('click', function (e) { e.stopPropagation(); var p = presets.find(function (x) { return x.id === b.dataset.pid; }); if (p) showDeleteModal(p); });
     });
 
+   // Default preset toggle
+ tb.querySelectorAll('.trr-pa-default').forEach(function (b) {
+   b.addEventListener('click', function (e) {
+     e.stopPropagation();
+     if (settings.defaultPresetId === b.dataset.pid) {
+       settings.defaultPresetId = null;
+       showToast('Default preset removed');
+     } else {
+       settings.defaultPresetId = b.dataset.pid;
+       var p = presets.find(function (x) { return x.id === b.dataset.pid; });
+       showToast('★ "' + (p ? p.name : '') + '" is now your default');
+     }
+     saveSettings();
+     refreshToolbar();
+   });
+ });
     tb.querySelector('#trr-save-current').addEventListener('click', showSaveModal);
     tb.querySelector('#trr-compact-toggle').addEventListener('change', function (e) { settings.compactView = e.target.checked; applyCompactView(); saveSettings(); });
     tb.querySelector('#trr-dim-toggle').addEventListener('change', function (e) { settings.dimSold = e.target.checked; applyDimSold(); saveSettings(); });

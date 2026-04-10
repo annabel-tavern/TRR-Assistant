@@ -23,9 +23,10 @@
 .trr-preset-actions { position: absolute; top: -8px; right: -4px; display: flex; gap: 2px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
 .trr-preset-wrap:hover .trr-preset-actions { opacity: 1; pointer-events: auto; }
 .trr-pa-edit, .trr-pa-del { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: #333; border: 1px solid #555; border-radius: 50%; color: #ccc; font-size: 10px; cursor: pointer; transition: all 0.15s; font-family: inherit; padding: 0; line-height: 1; }
+.trr-pa-default { color: #998a6e; }
+.trr-pa-default:hover { background: #c8a97e; color: #1a1a1a; border-color: #c8a97e; }
 .trr-pa-edit:hover { background: #c8a97e; color: #1a1a1a; border-color: #c8a97e; }
 .trr-pa-del:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
-
 .trr-save-btn { padding: 6px 14px; background: transparent; border: 1px dashed #555; border-radius: 20px; color: #c8a97e; font-size: 12px; font-family: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
 .trr-save-btn:hover { border-color: #c8a97e; background: rgba(200,169,126,0.1); }
 .trr-divider { width: 1px; height: 28px; background: #333; flex-shrink: 0; }
