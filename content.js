@@ -147,10 +147,55 @@
     tb._emoji = function () { return selEmoji; };
     tb._setEmoji = function (em) { selEmoji = em; tb.querySelectorAll('.trr-emoji-btn').forEach(function (b) { b.classList.toggle('trr-es', b.dataset.emoji === em); }); };
 
-    tb.querySelector('#trr-del-cancel').addEventListener('click', closeDelModal);
-    tb.querySelector('#trr-del-confirm').addEventListener('click', handleDelete);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeModal(); closeDelModal(); } });
-  }
+   tb.querySelector('#trr-del-cancel').addEventListener('click', closeDelModal);
+ tb.querySelector('#trr-del-confirm').addEventListener('click', handleDelete);
+
+ // Keyboard shortcuts
+ document.addEventListener('keydown', function (e) {
+   // Always allow Escape to close modals
+   if (e.key === 'Escape') { closeModal(); closeDelModal(); return; }
+
+   // Don't fire shortcuts when typing in an input, textarea, or contenteditable
+   var tag = e.target.tagName;
+   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+
+   // Don't fire if a modal is open
+   if (document.getElementById('trr-save-modal').style.display !== 'none') return;
+   if (document.getElementById('trr-delete-modal').style.display !== 'none') return;
+
+   // 1-9: Apply preset by number
+   var num = parseInt(e.key);
+   if (num >= 1 && num <= 9 && num <= presets.length) {
+     e.preventDefault();
+     navPreset(presets[num - 1], e.shiftKey);
+     return;
+   }
+
+   // D: Toggle dim sold
+   if (e.key === 'd' || e.key === 'D') {
+     e.preventDefault();
+     settings.dimSold = !settings.dimSold;
+     applyDimSold();
+     saveSettings();
+     var dimToggle = document.getElementById('trr-dim-toggle');
+     if (dimToggle) dimToggle.checked = settings.dimSold;
+     showToast(settings.dimSold ? '👁 Dim sold on' : '👁 Dim sold off');
+     return;
+   }
+
+   // C: Toggle compact view
+   if (e.key === 'c' || e.key === 'C') {
+     e.preventDefault();
+     settings.compactView = !settings.compactView;
+     applyCompactView();
+     saveSettings();
+     var compactToggle = document.getElementById('trr-compact-toggle');
+     if (compactToggle) compactToggle.checked = settings.compactView;
+     showToast(settings.compactView ? '⚡ Compact on' : '⚡ Compact off');
+     return;
+   }
+ });
+ }
 
   function navPreset(p, full) {
     var btn = document.querySelector('.trr-preset-btn[data-pid="' + CSS.escape(p.id) + '"]');
