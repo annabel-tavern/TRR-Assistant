@@ -6,6 +6,7 @@
 
   var presets = [];
   var settings = { compactView: false, dimSold: true, toolbarCollapsed: false, defaultPresetId: null };
+  var editingPresetId = null;
 
   function esc(str) { var d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
 
