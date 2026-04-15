@@ -107,7 +107,6 @@
         '<span class="trr-preset-icon">' + esc(p.emoji || '🔖') + '</span>' +
         '<span class="trr-preset-name">' + esc(p.name) + '</span></button>' +
         '<div class="trr-preset-actions">' +
-       '<div class="trr-preset-actions">' +
  '<button class="trr-pa-default" data-pid="' + esc(p.id) + '" title="' + (settings.defaultPresetId === p.id ? 'Remove as default' : 'Set as default') + '">' + (settings.defaultPresetId === p.id ? '★' : '☆') + '</button>' +
  '<button class="trr-pa-edit" data-pid="' + esc(p.id) + '" title="Edit">✎</button>' +
  '<button class="trr-pa-del" data-pid="' + esc(p.id) + '" title="Delete">✕</button>' +
